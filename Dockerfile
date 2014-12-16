@@ -20,7 +20,7 @@ RUN curl -sS https://getcomposer.org/installer | php && \
     mv composer.phar /usr/local/bin/composer
 
 # Move files into place
-COPY src/ /home/app/src
+COPY test/ /home/app/test
 COPY composer.json /home/app/
 COPY composer.lock /home/app/
 
