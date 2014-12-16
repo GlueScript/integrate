@@ -1,0 +1,12 @@
+{
+    "require": {
+        "guzzlehttp/guzzle": "~5.0"
+    },
+    "require-dev": {
+        "symfony/browser-kit": ">=2.3,<2.4-dev",
+        "phpunit/phpunit": "4.3.*"
+    },
+    "config": {
+        "bin-dir": "bin"
+    }
+}
