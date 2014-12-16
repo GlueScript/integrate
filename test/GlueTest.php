@@ -43,6 +43,63 @@ class GlueTest extends PHPUnit_Framework_TestCase {
         $this->thenTheResponseBodyShouldBe('');
     }
 
+    public function getPassingScripts()
+    {
+        return [
+            ['http://resource/ >> http://dom/?xpath=//img/@src >> http://report/'],
+        ];
+    }
+    
+    /**
+    * @dataProvider getPassingScripts
+    */
+    public function testScriptSuccess($script)
+    {
+        $this->givenARequestToGlue($script);
+        $this->whenTheRequestIsMade();
+        $this->thenTheResponseStatusShouldBe(200);
+    }
+    
+    public function testGenerateAReportFromImageResources()
+    {
+        $script = 'http://resource/ >> http://dom/?xpath=//img/@src / >> http://prepend/?prepend=http://resource/ / >> http://md/ >> http://report/';
+        $this->givenARequestToGlue($script);
+        $this->whenTheRequestIsMade();
+        $this->thenTheResponseStatusShouldBe(200);
+        $result = json_decode($this->response->getBody());
+        // first array in result should be table header
+        $this->assertSame(['uri','type','date','size'], $result[0]);
+    }
+    
+    public function testRunningPrependInParallelIsSameAsInSerial()
+    {
+        $script = 'http://resource/ >> http://dom/?xpath=//img/@src / >> http://prepend/?prepend=http://resource/ / >> http://md/ >> http://report/';
+        $this->givenARequestToGlue($script);
+        $this->whenTheRequestIsMade();
+        $response_a = json_decode((string) $this->response->getBody());
+
+        $script = 'http://resource/ >> http://dom/?xpath=//img/@src >> http://prepend/?prepend=http://resource/ / >> http://md/ >> http://report/';
+        $this->givenARequestToGlue($script);
+        $this->whenTheRequestIsMade();
+        $response_b = json_decode((string) $this->response->getBody());
+
+        $this->assertArrayContentsMatch($response_a, $response_b);
+    }
+    
+    /**
+    * Assert that $a and $b contain the same contents
+    */
+    protected function assertArrayContentsMatch(array $a, array $b)
+    {
+        $this->assertEquals(count($a), count($b));
+        foreach($a as $item){
+            $this->assertTrue(in_array($item, $b));
+        }
+        foreach($b as $item){
+            $this->assertTrue(in_array($item, $a));
+        }
+    }
+
     protected function givenARequestToGlue($body)
     {
         $this->request = $this->client->createRequest('POST', $this->glue_endpoint);
