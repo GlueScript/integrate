@@ -25,8 +25,8 @@ class GlueTest extends PHPUnit_Framework_TestCase {
     public function getFailingScripts()
     {
         return [
-            ['http://resource/ >> http://not-there.net/'],
-            ['http://resource/ >> http://dom?xpath=//img/@src >>  http://not-there.net/'],
+            ['GET http://resource/ POST http://not-there.net/'],
+            ['GET http://resource/ POST http://dom?xpath=//img/@src POST  http://not-there.net/'],
         ];
     }
 
@@ -46,7 +46,7 @@ class GlueTest extends PHPUnit_Framework_TestCase {
     public function getPassingScripts()
     {
         return [
-            ['http://resource/ >> http://dom/?xpath=//img/@src >> http://report/'],
+            ['GET http://resource/ POST http://dom/?xpath=//img/@src POST http://report/'],
         ];
     }
     
@@ -62,7 +62,7 @@ class GlueTest extends PHPUnit_Framework_TestCase {
     
     public function testGenerateAReportFromImageResources()
     {
-        $script = 'http://resource/ >> http://dom/?xpath=//img/@src / >> http://prepend/?prepend=http://resource/ / >> http://md/ >> http://report/';
+        $script = 'GET http://resource/ POST http://dom/?xpath=//img/@src / POST http://prepend/?prepend=http://resource/ / POST http://md/ POST http://report/';
         $this->givenARequestToGlue($script);
         $this->whenTheRequestIsMade();
         $this->thenTheResponseStatusShouldBe(200);
@@ -73,12 +73,12 @@ class GlueTest extends PHPUnit_Framework_TestCase {
     
     public function testRunningPrependInParallelIsSameAsInSerial()
     {
-        $script = 'http://resource/ >> http://dom/?xpath=//img/@src / >> http://prepend/?prepend=http://resource/ / >> http://md/ >> http://report/';
+        $script = 'GET http://resource/ POST http://dom/?xpath=//img/@src / POST http://prepend/?prepend=http://resource/ / POST http://md/ POST http://report/';
         $this->givenARequestToGlue($script);
         $this->whenTheRequestIsMade();
         $response_a = json_decode((string) $this->response->getBody());
 
-        $script = 'http://resource/ >> http://dom/?xpath=//img/@src >> http://prepend/?prepend=http://resource/ / >> http://md/ >> http://report/';
+        $script = 'GET http://resource/ POST http://dom/?xpath=//img/@src POST http://prepend/?prepend=http://resource/ / POST http://md/ POST http://report/';
         $this->givenARequestToGlue($script);
         $this->whenTheRequestIsMade();
         $response_b = json_decode((string) $this->response->getBody());
