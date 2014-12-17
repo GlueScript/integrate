@@ -9,9 +9,9 @@ use GuzzleHttp\Exception\ClientException;
 * Requires fig linking of services
 */
 class GlueTest extends PHPUnit_Framework_TestCase {
-   
+
     private $glue_endpoint = 'http://192.168.59.103:41990/';//'http://glue/';
-    
+
     private $client;
     private $request;
     private $response;
@@ -46,10 +46,10 @@ class GlueTest extends PHPUnit_Framework_TestCase {
     public function getPassingScripts()
     {
         return [
-            ['GET http://resource/ POST http://dom/?xpath=//img/@src POST http://report/'],
+            ['GET http://resource/ POST http://dom/?xpath=//img/@src POST http://report/ POST http://csv/'],
         ];
     }
-    
+
     /**
     * @dataProvider getPassingScripts
     */
@@ -59,7 +59,7 @@ class GlueTest extends PHPUnit_Framework_TestCase {
         $this->whenTheRequestIsMade();
         $this->thenTheResponseStatusShouldBe(200);
     }
-    
+
     public function testGenerateAReportFromImageResources()
     {
         $script = 'GET http://resource/ POST http://dom/?xpath=//img/@src / POST http://prepend/?prepend=http://resource/ / POST http://md/ POST http://report/';
@@ -70,7 +70,41 @@ class GlueTest extends PHPUnit_Framework_TestCase {
         // first array in result should be table header
         $this->assertSame(['uri','type','date','size'], $result[0]);
     }
-    
+
+    public function testGenerateCsvFromImageResources()
+    {
+        $script = 'GET http://resource/
+        POST http://dom/?xpath=//img/@src
+        / POST http://prepend/?prepend=http://resource/
+        / POST http://md/
+        POST http://report/
+        POST http://csv/';
+
+        $this->givenARequestToGlue($script);
+        $this->whenTheRequestIsMade();
+        $this->thenTheResponseStatusShouldBe(200);
+
+        $body = (string) $this->response->getBody();
+        $result = str_getcsv($body, "\n");
+        $csv = [];
+        foreach($result as $row){
+            $csv []= str_getcsv($row);
+        }
+        print_r($csv);
+        $expected = [
+            ['http://resource/images/dog.png', 'image/png', 'Tue, 16 Dec 2014 00:22:56 GMT', 126360],
+            ['http://resource/images/duck.png', 'image/png', 'Tue, 16 Dec 2014 00:23:12 GMT', 54710],
+            ['http://resource/images/map.jpg', 'image/jpeg', 'Tue, 16 Dec 2014 00:23:26 GMT', 209158],
+            ['http://resource/images/stupid.jpg', 'image/jpeg', 'Tue, 16 Dec 2014 00:23:50 GMT', 62307],
+        ];
+
+        // first array in result should be table header
+        $this->assertSame(['uri','type','date','size'], $csv[0]);
+        foreach($expected as $e){
+            $this->assertTrue(in_array($e, $csv));
+        }
+    }
+
     public function testRunningPrependInParallelIsSameAsInSerial()
     {
         $script = 'GET http://resource/ POST http://dom/?xpath=//img/@src / POST http://prepend/?prepend=http://resource/ / POST http://md/ POST http://report/';
@@ -85,7 +119,7 @@ class GlueTest extends PHPUnit_Framework_TestCase {
 
         $this->assertArrayContentsMatch($response_a, $response_b);
     }
-    
+
     /**
     * Assert that $a and $b contain the same contents
     */
