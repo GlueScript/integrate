@@ -90,7 +90,6 @@ class GlueTest extends PHPUnit_Framework_TestCase {
         foreach($result as $row){
             $csv []= str_getcsv($row);
         }
-        print_r($csv);
         $expected = [
             ['http://resource/images/dog.png', 'image/png', 'Tue, 16 Dec 2014 00:22:56 GMT', 126360],
             ['http://resource/images/duck.png', 'image/png', 'Tue, 16 Dec 2014 00:23:12 GMT', 54710],
