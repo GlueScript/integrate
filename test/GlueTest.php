@@ -10,7 +10,7 @@ use GuzzleHttp\Exception\ClientException;
 */
 class GlueTest extends PHPUnit_Framework_TestCase {
 
-    private $glue_endpoint = 'http://192.168.59.103:41990/';//'http://glue/';
+    private $glue_endpoint = 'http://192.168.59.103:49229/';//'http://glue/';
 
     private $client;
     private $request;
@@ -46,7 +46,8 @@ class GlueTest extends PHPUnit_Framework_TestCase {
     public function getPassingScripts()
     {
         return [
-            ['GET http://resource/ POST http://dom/?xpath=//img/@src POST http://report/ POST http://csv/'],
+            ['GET http://resource/ POST http://dom/?xpath=//img/@src POST http://md/ POST http://report/ POST http://csv/'],
+            ['GET http://resource/books.xml POST http://dom/?xpath=//book/@id'],
         ];
     }
 
