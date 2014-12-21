@@ -10,7 +10,7 @@ use GuzzleHttp\Exception\ClientException;
 */
 class GlueTest extends PHPUnit_Framework_TestCase {
 
-    private $glue_endpoint = 'http://192.168.59.103:49229/';//'http://glue/';
+    private $glue_endpoint = 'http://192.168.59.103:49291/';//'http://glue/';
 
     private $client;
     private $request;
@@ -118,6 +118,19 @@ class GlueTest extends PHPUnit_Framework_TestCase {
         $response_b = json_decode((string) $this->response->getBody());
 
         $this->assertArrayContentsMatch($response_a, $response_b);
+    }
+
+    public function testJoinTwoRequests()
+    {
+        $script = '+ ( GET http://resource/ GET http://resource/ ) / POST http://dom/?xpath=//img/@src';
+        $this->givenARequestToGlue($script);
+        $this->whenTheRequestIsMade();
+        $response_a = json_decode((string) $this->response->getBody());
+        
+        var_dump($response_a);
+        foreach($response_a as $item) {
+            $this->assertFalse(is_array($item));
+        }
     }
 
     /**
