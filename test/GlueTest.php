@@ -10,7 +10,7 @@ use GuzzleHttp\Exception\ClientException;
 */
 class GlueTest extends PHPUnit_Framework_TestCase {
 
-    private $glue_endpoint = 'http://192.168.59.103:49291/';//'http://glue/';
+    private $glue_endpoint = 'http://192.168.59.103:49200/';//'http://glue/';
 
     private $client;
     private $request;
@@ -25,8 +25,8 @@ class GlueTest extends PHPUnit_Framework_TestCase {
     public function getFailingScripts()
     {
         return [
-            ['GET http://resource/ POST http://not-there.net/'],
-            ['GET http://resource/ POST http://dom?xpath=//img/@src POST  http://not-there.net/'],
+            ['GET http://resource/ > POST http://not-there.net/'],
+            ['GET http://resource/ > POST http://dom?xpath=//img/@src > POST  http://not-there.net/'],
         ];
     }
 
@@ -46,8 +46,8 @@ class GlueTest extends PHPUnit_Framework_TestCase {
     public function getPassingScripts()
     {
         return [
-            ['GET http://resource/ POST http://dom/?xpath=//img/@src POST http://md/ POST http://report/ POST http://csv/'],
-            ['GET http://resource/books.xml POST http://dom/?xpath=//book/@id'],
+            ['GET http://resource/ > POST http://dom/?xpath=//img/@src > POST http://md/ > POST http://report/ > POST http://csv/'],
+            ['GET http://resource/books.xml > POST http://dom/?xpath=//book/@id'],
         ];
     }
 
@@ -63,7 +63,12 @@ class GlueTest extends PHPUnit_Framework_TestCase {
 
     public function testGenerateAReportFromImageResources()
     {
-        $script = 'GET http://resource/ POST http://dom/?xpath=//img/@src / POST http://prepend/?prepend=http://resource/ / POST http://md/ POST http://report/';
+        $script = 'GET http://resource/ 
+            > POST http://dom/?xpath=//img/@src 
+            / POST http://prepend/?prepend=http://resource/ 
+            / POST http://md/ 
+            > POST http://report/';
+
         $this->givenARequestToGlue($script);
         $this->whenTheRequestIsMade();
         $this->thenTheResponseStatusShouldBe(200);
@@ -75,11 +80,11 @@ class GlueTest extends PHPUnit_Framework_TestCase {
     public function testGenerateCsvFromImageResources()
     {
         $script = 'GET http://resource/
-        POST http://dom/?xpath=//img/@src
+        > POST http://dom/?xpath=//img/@src
         / POST http://prepend/?prepend=http://resource/
         / POST http://md/
-        POST http://report/
-        POST http://csv/';
+        > POST http://report/
+        > POST http://csv/';
 
         $this->givenARequestToGlue($script);
         $this->whenTheRequestIsMade();
@@ -107,12 +112,20 @@ class GlueTest extends PHPUnit_Framework_TestCase {
 
     public function testRunningPrependInParallelIsSameAsInSerial()
     {
-        $script = 'GET http://resource/ POST http://dom/?xpath=//img/@src / POST http://prepend/?prepend=http://resource/ / POST http://md/ POST http://report/';
+        $script = 'GET http://resource/ 
+            > POST http://dom/?xpath=//img/@src 
+            / POST http://prepend/?prepend=http://resource/ 
+            / POST http://md/ 
+            > POST http://report/';
         $this->givenARequestToGlue($script);
         $this->whenTheRequestIsMade();
         $response_a = json_decode((string) $this->response->getBody());
 
-        $script = 'GET http://resource/ POST http://dom/?xpath=//img/@src POST http://prepend/?prepend=http://resource/ / POST http://md/ POST http://report/';
+        $script = 'GET http://resource/ 
+            > POST http://dom/?xpath=//img/@src 
+            > POST http://prepend/?prepend=http://resource/ 
+            / POST http://md/ 
+            > POST http://report/';
         $this->givenARequestToGlue($script);
         $this->whenTheRequestIsMade();
         $response_b = json_decode((string) $this->response->getBody());
@@ -127,7 +140,6 @@ class GlueTest extends PHPUnit_Framework_TestCase {
         $this->whenTheRequestIsMade();
         $response_a = json_decode((string) $this->response->getBody());
         
-        var_dump($response_a);
         foreach($response_a as $item) {
             $this->assertFalse(is_array($item));
         }
